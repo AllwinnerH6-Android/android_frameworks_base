@@ -82,7 +82,8 @@ LOCAL_SHARED_LIBRARIES := \
     libGLESv1_CM \
     libgui \
     libtinyalsa \
-    libbase
+    libbase \
+    libmedia
 
 ifeq ($(PRODUCT_IOT),true)
 

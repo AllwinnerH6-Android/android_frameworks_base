@@ -57,7 +57,7 @@ typedef struct name_map_t
 
 static name_map audio_name_map[AUDIO_MAP_CNT] =
 {
-    {"sndacx00codec",        -1,        0,  1, -1},
+    {"sndacx00codec",        -1,        1,  1, -1},
     {"sndhdmi",              -1,        1,  0, -1},
     {"sndspdif",             -1,        0, -1, -1},
 };
@@ -371,8 +371,18 @@ bool AudioPlayer::init(const char* config)
 
 #ifdef TARGET_PLATFORM_HOMLET
     struct mixer* mixerhub = NULL;
+    struct mixer* mixercodec = NULL;
+    int cardcodec = -1;
     AudioMap  *audiomap = new AudioMap();
-    audiomap->init_audio_map();
+    audiomap->init_audio_map(&cardcodec);
+    if(cardcodec != -1){
+        mixercodec = mixer_open(cardcodec);
+        setMixerValue(mixercodec,"LINEOUT Volume","31");
+        setMixerValue(mixercodec,"Left DAC Mixer I2SDACL Switch","1");
+        setMixerValue(mixercodec,"Right DAC Mixer I2SDACR Switch","1");
+        setMixerValue(mixercodec,"Left Output Mixer DACL Switch","1");
+        setMixerValue(mixercodec,"Right Output Mixer DACR Switch","1");
+    }
     mixerhub = mixer_open(output_card);
     setMixerValue(mixerhub,"I2S1 Src Select","APBIF_TXDIF0");
     setMixerValue(mixerhub,"I2S1OUT Switch","1");
@@ -594,12 +604,12 @@ bool AudioPlayer::threadLoop()
         {
             //if 0(hdmi) 4(cvbs) is active then card[0], card[4] is active
             cards[index].hub_pcm = pcm_open(output_card, cards[index].output_device, PCM_OUT, &config);
-            //pcm = cards[index].hub_pcm;
             if (!cards[index].hub_pcm || !pcm_is_ready(cards[index].hub_pcm))
             {
                 ALOGE("Unable to open PCM device (%s)\n", pcm_get_error(cards[index].hub_pcm));
                 goto exit;
             }
+            pcm_prepare(cards[index].hub_pcm);
             bufferSize = pcm_frames_to_bytes(cards[index].hub_pcm, pcm_get_buffer_size(cards[index].hub_pcm));
         }
     }
@@ -616,7 +626,7 @@ bool AudioPlayer::threadLoop()
                 ALOGE("Unable to open PCM device (%s)\n", pcm_get_error(cards[index].pcm));
                 goto exit;
             }
-            //pcm_prepare(cards[index].pcm);
+            pcm_prepare(cards[index].pcm);
             bufferSize = pcm_frames_to_bytes(cards[index].pcm, pcm_get_buffer_size(cards[index].pcm));
         }
     }
@@ -689,7 +699,7 @@ AudioMap::AudioMap()
 AudioMap::~AudioMap()
 {}
 
-int AudioMap::init_audio_map()
+int AudioMap::init_audio_map(int *codec)
 {
     char path[PATH_LEN] = {0};
     char name[NAME_LEN] = {0};
@@ -724,6 +734,8 @@ int AudioMap::init_audio_map()
             {
                 audio_name_map[innerindex].card_num = index;
                 audio_name_map[innerindex].exist = 1;
+                if(!strcmp(audio_name_map[innerindex].name,"sndacx00codec"))
+                    *codec = index;
             }
             else
             {}

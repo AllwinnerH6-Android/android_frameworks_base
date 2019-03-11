@@ -2180,6 +2180,11 @@ public class AudioService extends IAudioService.Stub
     private void sendMasterMuteUpdate(boolean muted, int flags) {
         mVolumeController.postMasterMuteChanged(updateFlagsForSystemAudio(flags));
         broadcastMasterMuteStatus(muted);
+        Intent intent = new Intent(AudioManager.STREAM_MUTE_CHANGED_ACTION);
+        intent.putExtra(AudioManager.EXTRA_VOLUME_STREAM_TYPE, AudioManager.STREAM_MUSIC);
+        intent.putExtra(AudioManager.EXTRA_STREAM_VOLUME_MUTED, muted);
+        sendBroadcastToAll(intent);
+
     }
 
     private void broadcastMasterMuteStatus(boolean muted) {
@@ -7458,7 +7463,7 @@ public class AudioService extends IAudioService.Stub
             if (mController == null)
                 return;
             try {
-                mController.masterMuteChanged(flags);
+                mController.volumeChanged(AudioManager.STREAM_MUSIC, flags);
             } catch (RemoteException e) {
                 Log.w(TAG, "Error calling masterMuteChanged", e);
             }

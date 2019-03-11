@@ -31,6 +31,7 @@ import android.os.INetworkManagementService;
 import android.os.Messenger;
 import android.os.RemoteException;
 import android.os.SystemClock;
+import android.os.SystemProperties;
 import android.util.Log;
 import android.util.SparseArray;
 
@@ -437,7 +438,9 @@ public class NetworkAgentInfo implements Comparable<NetworkAgentInfo> {
 
         int score = currentScore;
         if (!lastValidated && !pretendValidated && !ignoreWifiUnvalidationPenalty()) {
-            score -= ConnectivityConstants.UNVALIDATED_SCORE_PENALTY;
+            if (!SystemProperties.get("ro.product.platform").equals("homlet")) {
+                score -= ConnectivityConstants.UNVALIDATED_SCORE_PENALTY;
+            }
         }
         if (score < 0) score = 0;
         return score;

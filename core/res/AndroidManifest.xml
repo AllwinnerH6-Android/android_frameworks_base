@@ -26,6 +26,7 @@
     <!-- ================================================ -->
     <eat-comment />
 
+    <protected-broadcast android:name="android.intent.action.AUDIO_PLUG_IN_OUT" />
     <protected-broadcast android:name="android.intent.action.SCREEN_OFF" />
     <protected-broadcast android:name="android.intent.action.SCREEN_ON" />
     <protected-broadcast android:name="android.intent.action.USER_PRESENT" />
@@ -396,6 +397,7 @@
     <protected-broadcast android:name="android.location.MODE_CHANGED" />
     <protected-broadcast android:name="android.location.GPS_FIX_CHANGE" />
     <protected-broadcast android:name="android.net.proxy.PAC_REFRESH" />
+    <protected-broadcast android:name="android.net.pppoe.PPPOE_STATE_CHANGED" />
 
     <protected-broadcast android:name="android.telecom.action.DEFAULT_DIALER_CHANGED" />
     <protected-broadcast android:name="android.provider.action.DEFAULT_SMS_PACKAGE_CHANGED" />
@@ -4300,6 +4302,16 @@
         <receiver android:name="com.android.server.stats.StatsCompanionService$PeriodicAlarmReceiver"
                   android:permission="android.permission.STATSCOMPANION"
                   android:exported="false">
+        </receiver>
+
+        <receiver android:name="com.android.server.AutoOTAReceiver" >
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+            </intent-filter>
+            <intent-filter android:priority="1000">
+                <action android:name="android.intent.action.MEDIA_MOUNTED" />
+                <data android:scheme="file" />
+            </intent-filter>
         </receiver>
 
         <service android:name="android.hardware.location.GeofenceHardwareService"

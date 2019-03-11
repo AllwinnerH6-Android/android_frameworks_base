@@ -41,4 +41,9 @@
     <string name="usb_output_message">USB Audio Out Device Has Plug in，Would You Please Choose or Not，\nafter %1$s second(s) will change to USB Audio Device</string>
     <string name="usb_yes">Yes</string>
     <string name="usb_no">No</string>
+
+    <string name="ota_title">"Update tips"</string>
+    <string name="ota_accept">"Yes"</string>
+    <string name="ota_reject">"No"</string>
+    <string name="ota_message">"Start Ota update from package in U Disk?"</string>
 </resources>

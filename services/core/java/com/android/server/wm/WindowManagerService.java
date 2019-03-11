@@ -268,6 +268,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
+
+import android.content.pm.ActivityInfo;
+
 /** {@hide} */
 public class WindowManagerService extends IWindowManager.Stub
         implements Watchdog.Monitor, WindowManagerPolicy.WindowManagerFuncs {
@@ -2458,7 +2461,13 @@ public class WindowManagerService extends IWindowManager.Stub
         long ident = Binder.clearCallingIdentity();
         try {
             final DisplayContent dc = mRoot.getDisplayContent(displayId);
-            final int req = dc.getOrientation();
+            int req;
+            if("homlet".equals(SystemProperties.get("ro.product.platform", "null"))){
+                req = "1".equals(SystemProperties.get("ro.sf.disablerotation","0"))?ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE:dc.getOrientation();
+            }
+            else{
+                req = dc.getOrientation();
+            }
             if (req != dc.getLastOrientation() || forceUpdate) {
                 dc.setLastOrientation(req);
                 //send a message to Policy indicating orientation change to take

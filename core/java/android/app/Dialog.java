@@ -57,6 +57,7 @@ import android.view.ViewGroup.LayoutParams;
 import android.view.Window;
 import android.view.WindowManager;
 import android.view.accessibility.AccessibilityEvent;
+import android.os.SystemProperties;
 
 import com.android.internal.R;
 import com.android.internal.app.WindowDecorActionBar;
@@ -66,20 +67,20 @@ import java.lang.ref.WeakReference;
 
 /**
  * Base class for Dialogs.
- * 
+ *
  * <p>Note: Activities provide a facility to manage the creation, saving and
  * restoring of dialogs. See {@link Activity#onCreateDialog(int)},
  * {@link Activity#onPrepareDialog(int, Dialog)},
  * {@link Activity#showDialog(int)}, and {@link Activity#dismissDialog(int)}. If
  * these methods are used, {@link #getOwnerActivity()} will return the Activity
  * that managed this dialog.
- * 
+ *
  * <p>Often you will want to have a Dialog display on top of the current
  * input method, because there is no reason for it to accept text.  You can
  * do this by setting the {@link WindowManager.LayoutParams#FLAG_ALT_FOCUSABLE_IM
  * WindowManager.LayoutParams.FLAG_ALT_FOCUSABLE_IM} window flag (assuming
  * your Dialog takes input focus, as it the default) with the following code:
- * 
+ *
  * <pre>
  * getWindow().setFlags(WindowManager.LayoutParams.FLAG_ALT_FOCUSABLE_IM,
  *         WindowManager.LayoutParams.FLAG_ALT_FOCUSABLE_IM);</pre>
@@ -336,7 +337,7 @@ public class Dialog implements DialogInterface, Window.Callback,
 
         sendShowMessage();
     }
-    
+
     /**
      * Hide the dialog, but do not dismiss it.
      */
@@ -782,6 +783,10 @@ public class Dialog implements DialogInterface, Window.Callback,
 
     @Override
     public void onAttachedToWindow() {
+        // fix dialog has no focus at some time for H6,setLocalFocus in onAttachedToWindow
+        if("homlet".equals(SystemProperties.get("ro.product.platform"))){
+            mWindow.setLocalFocus(true, true);
+        }
     }
 
     @Override

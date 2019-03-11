@@ -41,4 +41,11 @@
     <string name="usb_output_message">"USB音频输出设备已接入，请选择是否切换到USB音频设备输出,\n在 %1$s 秒后自动切换到USB音频设备"</string>
     <string name="usb_yes">"是"</string>
     <string name="usb_no">"否"</string>
+
+    <string name="ota_title">"升级提示"</string>
+    <string name="ota_accept">"确定"</string>
+    <string name="ota_reject">"取消"</string>
+    <string name="ota_message">"是否使用Ｕ盘中的升级包进行OTA升级？"</string>
+    <string name="ota_error">"U盘中未发现名为update.zip的升级包"</string>
+    <string name="ota_error_title">"错误提示"</string>
 </resources>

@@ -50,6 +50,7 @@ cc_library_shared {
         "storage_manager.cpp",
         "surface_texture.cpp",
         "trace.cpp",
+        "input_addon.cpp",
     ],
 
     shared_libs: [

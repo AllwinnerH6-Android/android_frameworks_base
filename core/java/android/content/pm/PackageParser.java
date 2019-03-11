@@ -4252,7 +4252,8 @@ public class PackageParser {
                 a.info.flags |= ActivityInfo.FLAG_RESUME_WHILE_PAUSING;
             }
 
-            a.info.screenOrientation = sa.getInt(
+             a.info.screenOrientation = "homlet".equals(SystemProperties.get("ro.product.platform", "null"))
+                     ? ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE : sa.getInt(
                     R.styleable.AndroidManifestActivity_screenOrientation,
                     SCREEN_ORIENTATION_UNSPECIFIED);
 

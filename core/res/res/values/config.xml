@@ -496,6 +496,7 @@
         <item>1</item>
         <item>7</item>
         <item>0</item>
+        <item>18</item>
     </integer-array>
 
     <!-- If the DUN connection for this CDMA device supports more than just DUN -->

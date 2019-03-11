@@ -29,6 +29,7 @@
 
 #include <poll.h>
 #include <errno.h>
+#include <android/input_addon.h>
 
 using android::InputEvent;
 using android::InputQueue;
@@ -47,7 +48,13 @@ int32_t AInputEvent_getDeviceId(const AInputEvent* event) {
 }
 
 int32_t AInputEvent_getSource(const AInputEvent* event) {
-    return static_cast<const InputEvent*>(event)->getSource();
+    int32_t source = static_cast<const InputEvent*>(event)->getSource();
+    //check if the process is kodi
+    int ret = ensureCallingProcesss("org.xbmc.kodi");
+    if(ret == 0){
+        source &= ~(1 << 10);
+    }
+    return source;
 }
 
 int32_t AKeyEvent_getAction(const AInputEvent* key_event) {

@@ -7013,6 +7013,9 @@ public class PhoneWindowManager implements WindowManagerPolicy {
             }
         }
         reportScreenStateToVrManager(false);
+        if (new File("/sys/class/extcon/hdmi/state").exists()) {
+                mHDMIObserver.stopObserving();
+        }
     }
 
     private long getKeyguardDrawnTimeout() {
@@ -7043,7 +7046,7 @@ public class PhoneWindowManager implements WindowManagerPolicy {
             } else {
                 if (DEBUG_WAKEUP) Slog.d(TAG,
                         "null mKeyguardDelegate: setting mKeyguardDrawComplete.");
-                finishKeyguardDrawn();
+                mHandler.sendEmptyMessage(MSG_KEYGUARD_DRAWN_COMPLETE);
             }
         }
     }
@@ -7137,6 +7140,9 @@ public class PhoneWindowManager implements WindowManagerPolicy {
                 mWindowManager.enableScreenIfNeeded();
             } catch (RemoteException unhandled) {
             }
+        }
+        if (new File("/sys/class/extcon/hdmi/state").exists()) {
+            mHDMIObserver.startObserving("DEVPATH=/devices/platform/soc/hdmi/extcon/hdmi");
         }
     }
 

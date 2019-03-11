@@ -26,6 +26,8 @@
 #include <EGL/egl.h>
 #include <GLES/gl.h>
 
+#include <media/mediaplayer.h>
+
 class SkBitmap;
 
 namespace android {
@@ -160,6 +162,10 @@ private:
 
     void checkExit();
 
+    // add for boot video
+    int startBootMedia(const char *path, bool looping);
+    void stopBootMedia();
+
     sp<SurfaceComposerClient>       mSession;
     sp<AudioPlayer>                 mAudioPlayer;
     AssetManager mAssets;
@@ -180,6 +186,10 @@ private:
     SortedVector<String8> mLoadedFiles;
     sp<TimeCheckThread> mTimeCheckThread = nullptr;
     sp<Callbacks> mCallbacks;
+
+    // add for boot video
+    sp<MediaPlayer> mPlayer;
+    const char *mVideoPath;
 };
 
 // ---------------------------------------------------------------------------

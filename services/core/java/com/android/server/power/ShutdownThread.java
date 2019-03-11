@@ -378,6 +378,12 @@ public final class ShutdownThread extends Thread {
             sInstance.mCpuWakeLock = null;
         }
 
+        final boolean shutdownForceScreenOff = context.getResources().getBoolean(
+                        com.android.internal.R.bool.config_shutdownForceScreenOff);
+        if (shutdownForceScreenOff) {
+            sInstance.mPowerManager.goToSleep(SystemClock.uptimeMillis(),
+                    PowerManager.GO_TO_SLEEP_REASON_POWER_BUTTON, 0);
+        }
         // also make sure the screen stays on for better user experience
         sInstance.mScreenWakeLock = null;
         if (sInstance.mPowerManager.isScreenOn()) {

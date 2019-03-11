@@ -61,18 +61,26 @@
 #include <GLES/glext.h>
 #include <EGL/eglext.h>
 
+// for setDataSource
+#include <media/IMediaHTTPService.h>
+#include <binder/IServiceManager.h>
+
 #include "BootAnimation.h"
 #include "AudioPlayer.h"
 
+#define SYSTEM_BOOTVIDEO_FILE   "/system/media/boot.mp4"
+#define USER_BOOTVIDEO_FILE     "/data/local/boot.mp4"
 namespace android {
 
 static const char OEM_BOOTANIMATION_FILE[] = "/oem/media/bootanimation.zip";
 static const char PRODUCT_BOOTANIMATION_FILE[] = "/product/media/bootanimation.zip";
+static const char USER_BOOTANIMATION_FILE[] = "/data/local/bootanimation.zip";
 static const char SYSTEM_BOOTANIMATION_FILE[] = "/system/media/bootanimation.zip";
 static const char PRODUCT_ENCRYPTED_BOOTANIMATION_FILE[] = "/product/media/bootanimation-encrypted.zip";
 static const char SYSTEM_ENCRYPTED_BOOTANIMATION_FILE[] = "/system/media/bootanimation-encrypted.zip";
 static const char OEM_SHUTDOWNANIMATION_FILE[] = "/oem/media/shutdownanimation.zip";
 static const char PRODUCT_SHUTDOWNANIMATION_FILE[] = "/product/media/shutdownanimation.zip";
+static const char USER_SHUTDOWNANIMATION_FILE[] = "/data/local/shutdownanimation.zip";
 static const char SYSTEM_SHUTDOWNANIMATION_FILE[] = "/system/media/shutdownanimation.zip";
 
 static const char SYSTEM_DATA_DIR_PATH[] = "/data/system";
@@ -120,6 +128,8 @@ BootAnimation::BootAnimation(sp<Callbacks> callbacks)
     } else {
         mShuttingDown = true;
     }
+
+
 }
 
 BootAnimation::BootAnimation()
@@ -132,6 +142,13 @@ BootAnimation::BootAnimation()
         mShuttingDown = false;
     } else {
         mShuttingDown = true;
+    }
+
+    mVideoPath = NULL;
+    if (access(USER_BOOTVIDEO_FILE, R_OK) == 0) {
+        mVideoPath = USER_BOOTVIDEO_FILE;
+    } else if (access(SYSTEM_BOOTVIDEO_FILE, R_OK) == 0) {
+        mVideoPath = SYSTEM_BOOTVIDEO_FILE;
     }
 }
 
@@ -276,6 +293,19 @@ status_t BootAnimation::initTexture(FileMap* map, int* width, int* height)
     return NO_ERROR;
 }
 
+static void waitServiceReady()
+{
+    char value[PROPERTY_VALUE_MAX];
+    do {
+        property_get("init.svc.media", value, "0");
+        if (!strcmp(value, "running"))
+            break;
+
+        ALOGD("media not published, waiting...");
+        usleep(100000);
+    } while (true);
+}
+
 status_t BootAnimation::readyToRun() {
     mAssets.addDefaultAssets();
 
@@ -295,6 +325,27 @@ status_t BootAnimation::readyToRun() {
         .apply();
 
     sp<Surface> s = control->getSurface();
+
+    if (mVideoPath != NULL) {
+        mFlingerSurface = s;
+        mFlingerSurfaceControl = control;
+
+        waitServiceReady();
+        if (startBootMedia(mVideoPath, true) == 0) {
+            do {
+                usleep(100000);
+                checkExit();
+            } while (!exitPending());
+
+            stopBootMedia();
+
+            mFlingerSurface.clear();
+            mFlingerSurfaceControl.clear();
+            IPCThreadState::self()->stopProcess();
+            return NO_ERROR;
+        }
+    }
+
 
     // initialize opengl and egl
     const EGLint attribs[] = {
@@ -349,9 +400,9 @@ status_t BootAnimation::readyToRun() {
         }
     }
     static const char* bootFiles[] =
-        {PRODUCT_BOOTANIMATION_FILE, OEM_BOOTANIMATION_FILE, SYSTEM_BOOTANIMATION_FILE};
+        {PRODUCT_BOOTANIMATION_FILE, OEM_BOOTANIMATION_FILE, USER_BOOTANIMATION_FILE, SYSTEM_BOOTANIMATION_FILE};
     static const char* shutdownFiles[] =
-        {PRODUCT_SHUTDOWNANIMATION_FILE, OEM_SHUTDOWNANIMATION_FILE, SYSTEM_SHUTDOWNANIMATION_FILE};
+        {PRODUCT_SHUTDOWNANIMATION_FILE, OEM_SHUTDOWNANIMATION_FILE, USER_SHUTDOWNANIMATION_FILE, SYSTEM_SHUTDOWNANIMATION_FILE};
 
     for (const char* f : (!mShuttingDown ? bootFiles : shutdownFiles)) {
         if (access(f, R_OK) == 0) {
@@ -1083,6 +1134,42 @@ BootAnimation::Animation* BootAnimation::loadAnimation(const String8& fn)
 
     mLoadedFiles.remove(fn);
     return animation;
+}
+
+int BootAnimation::startBootMedia(const char *path, bool looping)
+{
+    if (!path || *path == '\0' || access(path, R_OK))
+        return -1;
+
+    mPlayer = new MediaPlayer();
+    if (mPlayer == NULL) {
+        ALOGE("new MediaPlayer() return NULL");
+        return -1;
+    }
+
+    char url[1024];
+    snprintf(url, sizeof(url), "file://%s", path);
+    if (mPlayer->setDataSource(0, url, 0) ||
+            mPlayer->setVideoSurfaceTexture(mFlingerSurface->getIGraphicBufferProducer()) ||
+            mPlayer->setLooping(looping) ||
+            mPlayer->setVolume(1.0, 1.0) ||
+            mPlayer->prepare() ||
+            mPlayer->start()) {
+        mPlayer->reset();
+        mPlayer.clear();
+        return -1;
+    }
+
+    return 0;
+}
+
+void BootAnimation::stopBootMedia()
+{
+    if (mPlayer != NULL) {
+        mPlayer->stop();
+        mPlayer->reset();
+        mPlayer.clear();
+     }
 }
 
 bool BootAnimation::playSoundsAllowed() const {

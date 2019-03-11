@@ -1581,6 +1581,7 @@ public class ConnectivityManager {
         sLegacyTypeToTransport.put(TYPE_WIFI_P2P,     NetworkCapabilities.TRANSPORT_WIFI);
         sLegacyTypeToTransport.put(TYPE_BLUETOOTH,    NetworkCapabilities.TRANSPORT_BLUETOOTH);
         sLegacyTypeToTransport.put(TYPE_ETHERNET,     NetworkCapabilities.TRANSPORT_ETHERNET);
+        sLegacyTypeToTransport.put(TYPE_PPPOE,        NetworkCapabilities.TRANSPORT_PPPOE);
     }
 
     private static final SparseIntArray sLegacyTypeToCapability = new SparseIntArray();

@@ -80,7 +80,7 @@ class AudioMap
 public:
     AudioMap();
     ~AudioMap();
-    int init_audio_map();
+    int init_audio_map(int *codec);
     int reinit_card(struct active_pcm (&cards)[CARD_NUM], int periodsize, int periodcount);
 };
 

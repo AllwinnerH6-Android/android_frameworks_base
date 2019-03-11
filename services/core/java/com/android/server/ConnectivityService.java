@@ -761,6 +761,22 @@ public class ConnectivityService extends IConnectivityManager.Stub
         mNetworkRequests.put(mDefaultRequest, defaultNRI);
         mNetworkRequestInfoLogs.log("REGISTER " + defaultNRI);
 
+        if (SystemProperties.get("ro.product.platform").equals("homlet")) {
+            final NetworkRequest mWifiRequest = createDefaultInternetRequestForTransport(
+                                                NetworkCapabilities.TRANSPORT_WIFI,
+                                                NetworkRequest.Type.REQUEST);
+            NetworkRequestInfo wifiNRI = new NetworkRequestInfo(null, mWifiRequest, new Binder());
+            mNetworkRequests.put(mWifiRequest, wifiNRI);
+            mNetworkRequestInfoLogs.log("REGISTER " + wifiNRI);
+
+            final NetworkRequest mPppoeRequest = createDefaultInternetRequestForTransport(
+                                                 NetworkCapabilities.TRANSPORT_PPPOE,
+                                                 NetworkRequest.Type.REQUEST);
+            NetworkRequestInfo pppoeNRI = new NetworkRequestInfo(null, mPppoeRequest, new Binder());
+            mNetworkRequests.put(mPppoeRequest, pppoeNRI);
+            mNetworkRequestInfoLogs.log("REGISTER " + pppoeNRI);
+        }
+
         mDefaultMobileDataRequest = createDefaultInternetRequestForTransport(
                 NetworkCapabilities.TRANSPORT_CELLULAR, NetworkRequest.Type.BACKGROUND_REQUEST);
 

@@ -175,6 +175,7 @@ public class TvWindowManager extends PhoneWindowManager {
     NotificationManager mNotifationManager = null;
     Notification mNotificationEnterKeyMouseMode = null;
     Toast        mMouseToast = null;
+    ActivityManager mActivityManager;
 
     Runnable     mPromptEnterMouseMode = new Runnable(){
         public void run() {
@@ -319,6 +320,7 @@ public class TvWindowManager extends PhoneWindowManager {
                 }
                 if(mNotificationEnterKeyMouseMode == null){
                     NotificationChannel channel = new NotificationChannel("TvWindow_Mouse", "MouseChannel", NotificationManager.IMPORTANCE_DEFAULT);
+                    channel.setSound(null, null);
                     mNotifationManager.createNotificationChannel(channel);
                     Intent intent = new Intent();
                     PendingIntent contentIntent = PendingIntent.getActivity(mContext, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
@@ -489,6 +491,13 @@ public class TvWindowManager extends PhoneWindowManager {
                     mContext.startActivity(intent);
                     break;
                 case KeyEvent.KEYCODE_APPS:
+                    if(mActivityManager == null)
+                        mActivityManager = (ActivityManager)mContext.getSystemService(Context.ACTIVITY_SERVICE);
+                    ComponentName cn = mActivityManager.getRunningTasks(1).get(0).topActivity;
+                    String ActivityName = cn.getClassName();
+                    Log.d(TAG, "current activity is " + ActivityName);
+                    if(ActivityName.contains("launcher.device.apps.AppsActivity"))
+                        break;
                     Intent app_intent = new Intent();
                     app_intent.setComponent(new ComponentName("com.android.tv.launcher", "com.android.tv.launcher.device.apps.AppsActivity"));
                     app_intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
@@ -519,12 +528,12 @@ public class TvWindowManager extends PhoneWindowManager {
 		    }
                     break;
         case KeyEvent.KEYCODE_MUTE:
+        case KeyEvent.KEYCODE_VOLUME_MUTE:
             Log.d(TAG, "key Mute");
             handleMute(keyCode); //cmcc
             break;
         case KeyEvent.KEYCODE_VOLUME_DOWN:
         case KeyEvent.KEYCODE_VOLUME_UP:
-        case KeyEvent.KEYCODE_VOLUME_MUTE:
 			Log.d(TAG,"mIsMute = " + mIsMute);
             if(mIsMute){
                 handleMute(keyCode);  //cmcc

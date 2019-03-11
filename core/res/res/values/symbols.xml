@@ -3399,4 +3399,10 @@
 
   <java-symbol type="integer" name="config_defaultHapticFeedbackIntensity" />
   <java-symbol type="integer" name="config_defaultNotificationVibrationIntensity" />
+
+  <java-symbol type="string" name="ota_title" />
+  <java-symbol type="string" name="ota_message" />
+  <java-symbol type="string" name="ota_accept" />
+  <java-symbol type="string" name="ota_reject" />
+
 </resources>

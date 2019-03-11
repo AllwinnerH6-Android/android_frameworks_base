@@ -343,7 +343,7 @@ public class UsbManager {
     public static final long FUNCTION_ADB = GadgetFunction.ADB;
 
     private static final long SETTABLE_FUNCTIONS = FUNCTION_MTP | FUNCTION_PTP | FUNCTION_RNDIS
-            | FUNCTION_MIDI;
+            | FUNCTION_MIDI | FUNCTION_AUDIO_SOURCE;
 
     private static final Map<String, Long> FUNCTION_NAME_TO_CODE = new HashMap<>();
 

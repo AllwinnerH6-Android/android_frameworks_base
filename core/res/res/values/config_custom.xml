@@ -19,9 +19,5 @@
     -->
     <bool name="config_ledShutdownAllOff">false</bool>
 
-	<!-- Control the behavior when the user double presses the power button.
-            0 - Nothing
-            1 - Toggle theater mode setting
-            2 - Brightness boost
-    -->
+    <bool name="config_shutdownForceScreenOff">false</bool>
 </resources>
