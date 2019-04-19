@@ -24,6 +24,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.ApplicationInfo;
 import android.content.res.Configuration;
+import android.net.wifi.WifiManager;
 import android.os.Process;
 import android.os.SystemProperties;
 import android.os.Trace;
@@ -61,11 +62,11 @@ public class SystemUIApplication extends Application implements SysUiServiceProv
      * Hold a reference on the stuff we start.
      */
     private SystemUI[] mServices;
+    private String[] mNames;
     private boolean mServicesStarted;
     private boolean mBootCompleted;
     private final Map<Class<?>, Object> mComponents = new HashMap<>();
-    private final List<Integer> mDelayStartList = new ArrayList<>();
-    private final List<String> mDelayStartServicesName = new ArrayList<>();
+    private final List<String> mBaseStartServices = new ArrayList<>();
 
     @Override
     public void onCreate() {
@@ -76,7 +77,28 @@ public class SystemUIApplication extends Application implements SysUiServiceProv
         setTheme(R.style.Theme_SystemUI);
 
         SystemUIFactory.createFromConfig(this);
-        mDelayStartServicesName.add("com.android.systemui.volume.VolumeUI");
+        mBaseStartServices.add("com.android.systemui.Dependency");
+        mBaseStartServices.add("com.android.systemui.statusbar.CommandQueue$CommandQueueStart");
+        mBaseStartServices.add("com.android.systemui.keyguard.KeyguardViewMediator");
+        mBaseStartServices.add("com.android.systemui.SystemBars");
+        //mBaseStartServices.add("com.android.systemui.util.NotificationChannels");
+        //mBaseStartServices.add("com.android.systemui.recents.Recents");
+        //mBaseStartServices.add("com.android.systemui.volume.VolumeUI");
+        //mBaseStartServices.add("com.android.systemui.stackdivider.Divider");
+        //mBaseStartServices.add("com.android.systemui.usb.StorageNotification");
+        //mBaseStartServices.add("com.android.systemui.power.PowerUI");
+        //mBaseStartServices.add("com.android.systemui.media.RingtonePlayer");
+        //mBaseStartServices.add("com.android.systemui.keyboard.KeyboardUI");
+        //mBaseStartServices.add("com.android.systemui.pip.PipUI");
+        //mBaseStartServices.add("com.android.systemui.shortcut.ShortcutKeyDispatcher");
+        //mBaseStartServices.add("com.android.systemui.VendorServices");
+        //mBaseStartServices.add("com.android.systemui.util.leak.GarbageMonitor$Service");
+        //mBaseStartServices.add("com.android.systemui.LatencyTester");
+        //mBaseStartServices.add("com.android.systemui.globalactions.GlobalActionsComponent");
+        //mBaseStartServices.add("com.android.systemui.ScreenDecorations");
+        //mBaseStartServices.add("com.android.systemui.fingerprint.FingerprintDialogImpl");
+        //mBaseStartServices.add("com.android.systemui.SliceBroadcastRelayHandler");
+
 
         if (Process.myUserHandle().equals(UserHandle.SYSTEM)) {
             IntentFilter bootCompletedFilter = new IntentFilter(Intent.ACTION_BOOT_COMPLETED);
@@ -92,9 +114,30 @@ public class SystemUIApplication extends Application implements SysUiServiceProv
                     if (mServicesStarted) {
                         final int N = mServices.length;
                         for (int i = 0; i < N; i++) {
-                            if (mDelayStartList.contains(i))
+                            long ti = System.currentTimeMillis();
+                            if (mServices[i] == null) {
+                                String clsName = mNames[i];
+                                if (DEBUG) Log.d(TAG, "loading: " + clsName);
+                                Class cls;
+                                try {
+                                    cls = Class.forName(clsName);
+                                    mServices[i] = (SystemUI) cls.newInstance();
+                                } catch(ClassNotFoundException ex){
+                                    throw new RuntimeException(ex);
+                                } catch (IllegalAccessException ex) {
+                                    throw new RuntimeException(ex);
+                                } catch (InstantiationException ex) {
+                                    throw new RuntimeException(ex);
+                                }
+
+                                mServices[i].mContext = SystemUIApplication.this;
+                                mServices[i].mComponents = mComponents;
+                                if (DEBUG) Log.d(TAG, "running: " + mServices[i]);
                                 mServices[i].start();
+                            }
                             mServices[i].onBootCompleted();
+                            ti = System.currentTimeMillis() - ti;
+                            Log.d("SystemUIBootTiming", "SystemUIService: bootcomplete " + mServices[i].getClass().getName() + " took " + ti + " ms");
                         }
                     }
 
@@ -127,6 +170,29 @@ public class SystemUIApplication extends Application implements SysUiServiceProv
             // start those components now for the current non-system user.
             startSecondaryUserServicesIfNeeded();
         }
+
+        IntentFilter bootToostFilter = new IntentFilter();
+        bootToostFilter.setPriority(IntentFilter.SYSTEM_HIGH_PRIORITY);
+        bootToostFilter.addAction(Intent.ACTION_BOOT_COMPLETED);
+        bootToostFilter.addAction(Intent.ACTION_SHUTDOWN);
+        registerReceiver(new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                WifiManager wm = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
+                if (Intent.ACTION_BOOT_COMPLETED.equals(intent.getAction())) {
+                    boolean enable = Prefs.getBoolean(context, "wifiEnabled", false);
+                    if (enable) {
+                        wm.setWifiEnabled(true);
+                        Prefs.remove(context, "wifiEnabled");
+                    }
+                } else if (Intent.ACTION_SHUTDOWN.equals(intent.getAction())) {
+                    if (wm.isWifiEnabled()) {
+                        Prefs.putBoolean(context, "wifiEnabled", true);
+                        wm.setWifiEnabled(false);
+                    }
+                }
+            }
+        }, bootToostFilter);
     }
 
     // AW:Added for BOOTEVENT
@@ -183,6 +249,7 @@ public class SystemUIApplication extends Application implements SysUiServiceProv
         if (mServicesStarted) {
             return;
         }
+        mNames = services;
         mServices = new SystemUI[services.length];
 
         if (!mBootCompleted) {
@@ -204,7 +271,9 @@ public class SystemUIApplication extends Application implements SysUiServiceProv
         final int N = services.length;
         for (int i = 0; i < N; i++) {
             String clsName = services[i];
-            boolean delay = mDelayStartServicesName.contains(clsName);
+            if (!mBootCompleted && !mBaseStartServices.contains(clsName)) {
+                continue;
+            }
             if (DEBUG) Log.d(TAG, "loading: " + clsName);
             log.traceBegin("StartServices" + clsName);
             long ti = System.currentTimeMillis();
@@ -223,10 +292,7 @@ public class SystemUIApplication extends Application implements SysUiServiceProv
             mServices[i].mContext = this;
             mServices[i].mComponents = mComponents;
             if (DEBUG) Log.d(TAG, "running: " + mServices[i]);
-            if (delay)
-                mDelayStartList.add(i);
-            else
-                mServices[i].start();
+            mServices[i].start();
             log.traceEnd();
 
             // Warn if initialization of component takes too long
@@ -239,8 +305,6 @@ public class SystemUIApplication extends Application implements SysUiServiceProv
                 logBootEvent("SystemUIService: running " + cls.getName() + " took " + ti + " ms");
             }
             if (mBootCompleted) {
-                if (mDelayStartList.contains(i))
-                    mServices[i].start();
                 mServices[i].onBootCompleted();
             }
         }

@@ -380,6 +380,12 @@ public class PipMenuActivity extends Activity {
                 mMenuContainerAnimator.addListener(new AnimatorListenerAdapter() {
                     @Override
                     public void onAnimationEnd(Animator animation) {
+                        if (getResources().getBoolean(R.bool.config_leanback_feature)){
+                            if (menuState == MENU_STATE_CLOSE) { //enter PiP, the last Activity should has Focus to handle Event quick in homlet
+                                repostDelayedFinish(100);
+                                return;
+                            }
+                        }
                         repostDelayedFinish(INITIAL_DISMISS_DELAY);
                     }
                 });
