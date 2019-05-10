@@ -924,6 +924,10 @@ public final class SystemServer {
             // Skip Bluetooth if we have an emulator kernel
             // TODO: Use a more reliable check to see if this product should
             // support Bluetooth - see bug 988521
+            String  wirelessModuleInfo = SystemProperties.get("persist.vendor.overlay.wlan.info");
+            boolean isBluetoothSupport = SystemProperties.get("persist.vendor.overlay.bluetooth.support").equals("1");
+            Slog.i(TAG, "wirelessModuleInfo: " + wirelessModuleInfo);
+            Slog.i(TAG, "isBluetoothSupport: " + isBluetoothSupport);
             if (isEmulator) {
                 Slog.i(TAG, "No Bluetooth Service (emulator)");
             } else if (mFactoryTestMode == FactoryTest.FACTORY_TEST_LOW_LEVEL) {
@@ -931,7 +935,7 @@ public final class SystemServer {
             } else if (!context.getPackageManager().hasSystemFeature
                        (PackageManager.FEATURE_BLUETOOTH)) {
                 Slog.i(TAG, "No Bluetooth Service (Bluetooth Hardware Not Present)");
-            } else {
+            } else if (isBluetoothSupport) {
                 traceBeginAndSlog("StartBluetoothService");
                 mSystemServiceManager.startService(BluetoothService.class);
                 traceEnd();

@@ -408,6 +408,21 @@ public final class BluetoothDevice implements Parcelable {
     public static final String ACTION_CONNECTION_ACCESS_CANCEL =
             "android.bluetooth.device.action.CONNECTION_ACCESS_CANCEL";
 
+    @SdkConstant(SdkConstantType.BROADCAST_INTENT_ACTION)
+    public static final String ACTION_INCOMINGFILE_REQUEST =
+            "android.bluetooth.device.action.INCOMINGFILE_REQUEST";
+
+    /** @hide */
+    @SdkConstant(SdkConstantType.BROADCAST_INTENT_ACTION)
+    public static final String ACTION_INCOMINGFILE_CONFIRM_REQUEST =
+            "android.bluetooth.device.action.INCOMINGFILE_CONFIRM_REQUEST";
+
+    /** @hide */
+    @SdkConstant(SdkConstantType.BROADCAST_INTENT_ACTION)
+    public static final String ACTION_INCOMINGFILE_CONFIRM_ACCEPT =
+            "android.bluetooth.device.action.INCOMINGFILE_CONFIRM_ACCEPT";
+
+
     /**
      * Used as an extra field in {@link #ACTION_CONNECTION_ACCESS_REQUEST} intent.
      *

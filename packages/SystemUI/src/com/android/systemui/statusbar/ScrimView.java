@@ -44,7 +44,7 @@ import com.android.internal.colorextraction.drawable.GradientDrawable;
 import com.android.settingslib.Utils;
 import com.android.systemui.Dependency;
 import com.android.systemui.statusbar.policy.ConfigurationController;
-
+import android.view.MotionEvent;
 /**
  * A view which can draw a scrim
  */
@@ -360,5 +360,10 @@ public class ScrimView extends View implements ConfigurationController.Configura
                 ((GradientDrawable) mDrawable).setScreenSize(size.x, size.y);
             }
         }
+    }
+
+    @Override
+    public boolean onTouchEvent(MotionEvent event) {
+        return false;
     }
 }

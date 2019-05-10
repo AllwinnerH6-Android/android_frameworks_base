@@ -156,6 +156,8 @@
     <protected-broadcast android:name="android.bluetooth.device.action.BATTERY_LEVEL_CHANGED" />
     <protected-broadcast android:name="android.bluetooth.devicepicker.action.LAUNCH" />
     <protected-broadcast android:name="android.bluetooth.devicepicker.action.DEVICE_SELECTED" />
+    <protected-broadcast android:name="android.bluetooth.device.action.INCOMINGFILE_REQUEST" />
+    <protected-broadcast android:name="android.bluetooth.device.action.INCOMINGFILE_CONFIRM_REQUEST" />
     <protected-broadcast
         android:name="android.bluetooth.headset.profile.action.CONNECTION_STATE_CHANGED" />
     <protected-broadcast
@@ -4311,6 +4313,12 @@
             <intent-filter android:priority="1000">
                 <action android:name="android.intent.action.MEDIA_MOUNTED" />
                 <data android:scheme="file" />
+            </intent-filter>
+        </receiver>
+
+        <receiver android:name="com.android.server.BluetoothIncomingFileRequest" >
+            <intent-filter android:priority="1000">
+                <action android:name="android.bluetooth.device.action.INCOMINGFILE_REQUEST"/>
             </intent-filter>
         </receiver>
 
